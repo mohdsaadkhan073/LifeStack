@@ -1,14 +1,24 @@
 // src/components/Sidebar.jsx
 import React from 'react';
-import { Home, Compass, BarChart2, Settings, User } from 'lucide-react';
+import { Home, Compass, BarChart2, User, Layers } from 'lucide-react';
 import { useTasks } from '../context/TaskContext';
 
 const Sidebar = ({ activeTab, setActiveTab }) => {
   const { tasks } = useTasks();
   
-  // Calculate simple Life Score based on completed tasks
-  const completedCount = tasks.filter(t => t.status === "completed").length;
-  const totalCount = tasks.length;
+  // Calculate Life Score only for TODAY's tasks
+  const todayTasks = tasks.filter(t => {
+    if (t.status === "pending") return true;
+    if (t.status === "completed" && t.completedAt) {
+      const dateObj = new Date(t.completedAt);
+      const today = new Date();
+      return dateObj.toDateString() === today.toDateString();
+    }
+    return false;
+  });
+  
+  const completedCount = todayTasks.filter(t => t.status === "completed").length;
+  const totalCount = todayTasks.length;
   const lifeScore = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
   const navItems = [
@@ -19,15 +29,21 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
   ];
 
   return (
-    <div className="w-20 md:w-64 border-r border-white/5 h-full bg-surface/30 backdrop-blur-md flex flex-col p-4 shrink-0 transition-all z-20">
-      <div className="flex items-center gap-3 mb-10 px-2 py-2">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
-          <span className="font-bold text-white text-lg">L</span>
+    <div className="w-64 h-full bg-surface/50 border-r border-white/5 backdrop-blur-xl flex flex-col p-6 shrink-0 relative overflow-hidden">
+      {/* Brand */}
+      <div className="flex items-center gap-3.5 mb-10 relative z-10 px-2 cursor-pointer group">
+        <div className="relative shrink-0">
+          <div className="absolute inset-0 bg-primary/40 blur-[12px] rounded-2xl group-hover:bg-primary/60 transition-all duration-300 group-hover:scale-110" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-400 to-blue-600 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.5)] relative z-10 border border-white/20 transition-transform">
+            <Layers size={20} className="text-white drop-shadow-md" />
+          </div>
         </div>
-        <h1 className="text-xl font-bold tracking-tight text-white hidden md:block">LifeStack</h1>
+        <h1 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-100 to-gray-400 tracking-tight flex items-baseline pb-1">
+          LifeStack<span className="text-primary text-4xl leading-[0] tracking-tighter ml-1 drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]">.</span>
+        </h1>
       </div>
 
-      <nav className="flex-1 flex flex-col gap-2">
+      <nav className="flex-1 flex flex-col gap-2 relative z-10">
         {navItems.map((item) => {
           const isActive = activeTab === item.id;
           return (

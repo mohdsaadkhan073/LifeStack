@@ -6,17 +6,35 @@ import Timeline from '../components/Timeline';
 import FocusTimer from '../components/FocusTimer';
 import { useTasks } from '../context/TaskContext';
 import { useUser } from '../context/UserContext';
-import { Compass, BarChart2, Plus, Zap, Target, User, Save, RefreshCw, Bell, Shield, TrendingUp, Clock, Activity, Download } from 'lucide-react';
+import { Compass, BarChart2, Plus, Zap, Target, User, Save, RefreshCw, Bell, Shield, TrendingUp, Clock, Activity, Download, CheckCircle2 } from 'lucide-react';
 
 const Dashboard = () => {
-  const { tasks, startFocus } = useTasks();
+  const { tasks, addTask, startFocus } = useTasks();
   const { user, updateUser } = useUser();
   const [activeTab, setActiveTab] = useState("Dashboard");
 
   // Basic Life Score Calculation
-  const completedCount = tasks.filter(t => t.status === "completed").length;
-  const totalCount = tasks.length;
+  // Calculate Life Score only for TODAY's tasks
+  const todayTasks = tasks.filter(t => {
+    if (t.status === "pending") return true;
+    if (t.status === "completed" && t.completedAt) {
+      const dateObj = new Date(t.completedAt);
+      const today = new Date();
+      return dateObj.toDateString() === today.toDateString();
+    }
+    return false;
+  });
+  
+  const completedCount = todayTasks.filter(t => t.status === "completed").length;
+  const totalCount = todayTasks.length;
   const lifeScore = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+
+  const handleImportTemplate = (template) => {
+    template.mockTasks.forEach(t => {
+      addTask({ ...t, duration: t.duration || 60, priority: t.priority || "medium", energy: t.energy || "medium" });
+    });
+    alert(`Imported ${template.title} routines into your Dashboard!`);
+  };
 
   const renderContent = () => {
     switch(activeTab) {
@@ -26,16 +44,22 @@ const Dashboard = () => {
             <h3 className="font-semibold text-xl border-b border-white/10 pb-4">Explore Community Templates</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                { title: "Deep Work Protocol", author: "@huberman", time: "4.5 hrs", uses: "12K+", color: "from-blue-500/20 to-blue-600/5", tags: ["Focus", "Science"] },
-                { title: "Creator's Morning", author: "@aliabdaal", time: "3 hrs", uses: "8.5K+", color: "from-purple-500/20 to-purple-600/5", tags: ["Creative", "Morning"] },
-                { title: "Student Exam Cram", author: "@studytok", time: "8 hrs", uses: "24K+", color: "from-green-500/20 to-green-600/5", tags: ["Study", "Intense"] },
-                { title: "Weekend Reset", author: "@saad", time: "5 hrs", uses: "3K+", color: "from-orange-500/20 to-orange-600/5", tags: ["Relax", "Chores"] },
+                { title: "Deep Work Protocol", author: "@huberman", time: "4.5 hrs", uses: "12K+", color: "from-blue-500/20 to-blue-600/5", tags: ["Focus", "Science"], mockTasks: [{title: "Focus Block 1", duration: 90, energy: "high", priority: "high"}, {title: "Zone 2 Cardio", duration: 45, energy: "medium", priority: "medium"}] },
+                { title: "Creator's Morning", author: "@aliabdaal", time: "3 hrs", uses: "8.5K+", color: "from-purple-500/20 to-purple-600/5", tags: ["Creative", "Morning"], mockTasks: [{title: "Write Script", duration: 120, energy: "high", priority: "high"}, {title: "Review Edits", duration: 60, energy: "medium", priority: "high"}] },
+                { title: "Student Exam Cram", author: "@studytok", time: "8 hrs", uses: "24K+", color: "from-green-500/20 to-green-600/5", tags: ["Study", "Intense"], mockTasks: [{title: "Past Papers", duration: 120, energy: "high", priority: "high"}, {title: "Flashcards", duration: 60, energy: "medium", priority: "medium"}] },
+                { title: "Weekend Reset", author: "@saad", time: "5 hrs", uses: "3K+", color: "from-orange-500/20 to-orange-600/5", tags: ["Relax", "Chores"], mockTasks: [{title: "Clean Room", duration: 60, energy: "medium", priority: "low"}, {title: "Read Book", duration: 90, energy: "low", priority: "medium"}] },
               ].map((template, idx) => (
                 <div key={idx} className={`p-5 rounded-2xl border border-white/5 bg-gradient-to-br ${template.color} hover:scale-[1.02] transition-transform cursor-pointer group flex flex-col justify-between min-h-[160px]`}>
                   <div>
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-bold text-lg text-white group-hover:text-primary transition-colors">{template.title}</h4>
-                      <button className="bg-white/10 hover:bg-white/20 p-1.5 rounded-lg transition-colors"><Download size={16} /></button>
+                      <button 
+                        onClick={() => handleImportTemplate(template)}
+                        className="bg-white/10 hover:bg-white/20 p-1.5 rounded-lg transition-colors group/btn relative"
+                      >
+                        <Download size={16} />
+                        <span className="opacity-0 group-hover/btn:opacity-100 absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black text-[10px] px-2 py-1 rounded whitespace-nowrap">Import workflow</span>
+                      </button>
                     </div>
                     <span className="text-xs text-gray-400 font-mono">{template.author}</span>
                   </div>
@@ -51,6 +75,22 @@ const Dashboard = () => {
           </div>
         );
       case "Analytics":
+        const completedHistory = tasks.filter(t => t.status === "completed" && t.completedAt);
+        // Parse dates into human-readable strings "Today, Yesterday, Mar 25"
+        const groupedHistory = completedHistory.reduce((acc, task) => {
+          const dateObj = new Date(task.completedAt);
+          const today = new Date();
+          const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+          
+          let dateStr = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+          if(dateObj.toDateString() === today.toDateString()) dateStr = "Today";
+          else if(dateObj.toDateString() === yesterday.toDateString()) dateStr = "Yesterday";
+          
+          if(!acc[dateStr]) acc[dateStr] = [];
+          acc[dateStr].push(task);
+          return acc;
+        }, {});
+        
         return (
           <div className="flex-1 glass-panel p-6 md:p-8 rounded-3xl flex flex-col min-h-0 overflow-y-auto custom-scrollbar gap-6 relative">
             <h3 className="font-semibold text-xl border-b border-white/10 pb-4">Performance Analytics</h3>
@@ -83,6 +123,44 @@ const Dashboard = () => {
                   <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded shadow-lg transition-opacity whitespace-nowrap">Day {i+1}</div>
                 </div>
               ))}
+            </div>
+
+            {/* History Tracker */}
+            <div className="mt-8 border-t border-white/10 pt-6">
+              <h4 className="font-semibold text-xl mb-4 text-gray-200">Completed Tasks History</h4>
+              
+              {Object.keys(groupedHistory).length === 0 ? (
+                <div className="p-8 text-center border border-white/5 rounded-2xl bg-black/20 text-gray-500">
+                  <CheckCircle2 size={40} className="mx-auto mb-3 opacity-20" />
+                  <p>No completed tasks in the history yet. Go get some work done!</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-8">
+                  {Object.entries(groupedHistory).map(([dateLabel, dayTasks]) => (
+                    <div key={dateLabel}>
+                      <h5 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 border-l-2 border-primary pl-3">
+                        {dateLabel}
+                      </h5>
+                      <div className="flex flex-col gap-3">
+                        {dayTasks.map(task => (
+                          <div key={task.id} className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-white/5">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-green-500/20 text-green-400 flex items-center justify-center shrink-0">
+                                <CheckCircle2 size={16} />
+                              </div>
+                              <div>
+                                <h6 className="font-semibold text-gray-200 line-through opacity-80 decoration-green-500/50">{task.title}</h6>
+                                <p className="text-xs text-gray-500">Completed at {new Date(task.completedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                              </div>
+                            </div>
+                            <span className="text-xs bg-white/5 px-2 py-1 rounded text-gray-400">{task.duration}m</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         );
