@@ -6,7 +6,7 @@ import Timeline from '../components/Timeline';
 import FocusTimer from '../components/FocusTimer';
 import { useTasks } from '../context/TaskContext';
 import { useUser } from '../context/UserContext';
-import { Compass, BarChart2, Plus, Zap, Target, User, Save, RefreshCw, Bell, Shield, TrendingUp, Clock, Activity, Download, CheckCircle2 } from 'lucide-react';
+import { Compass, BarChart2, Plus, Zap, Target, User, Save, RefreshCw, Bell, Shield, TrendingUp, Clock, Activity, Download, CheckCircle2, LogOut } from 'lucide-react';
 
 const Dashboard = () => {
   const { tasks, addTask, startFocus } = useTasks();
@@ -278,6 +278,15 @@ const Dashboard = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Sign Out Button */}
+                <button 
+                  onClick={() => updateUser({ isAuthenticated: false })}
+                  className="mt-8 w-full bg-danger/10 hover:bg-danger/20 text-danger border border-danger/20 font-semibold py-4 rounded-xl transition-all flex items-center justify-center gap-2 group"
+                >
+                  <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
+                  Sign Out
+                </button>
               </div>
             </div>
           </div>

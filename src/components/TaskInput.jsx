@@ -18,32 +18,35 @@ const TaskInput = () => {
     setText('');
   };
 
-  const startListening = () => {
-    if (!('webkitSpeechRecognition' in window)) {
-      alert("Voice capture not supported in this browser.");
-      return;
-    }
-    const recognition = new window.webkitSpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
+  const toggleListening = () => {
+    if (isListening) {
+      if (window.currentRecognition) {
+        window.currentRecognition.stop();
+        setIsListening(false);
+      }
+    } else {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert("Voice capture not supported in this browser.");
+        return;
+      }
+      const recognition = new window.webkitSpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      
+      let baseText = text ? text + " " : "";
 
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setText((prev) => prev ? `${prev} ${transcript}` : transcript);
-      setIsListening(false);
-    };
-    recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => setIsListening(false);
-
-    window.currentRecognition = recognition;
-    setIsListening(true);
-    recognition.start();
-  };
-
-  const stopListening = () => {
-    if (isListening && window.currentRecognition) {
-      window.currentRecognition.stop();
-      setIsListening(false);
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0].transcript)
+          .join('');
+        setText(baseText + transcript);
+      };
+      recognition.onerror = () => setIsListening(false);
+      recognition.onend = () => setIsListening(false);
+      
+      window.currentRecognition = recognition;
+      setIsListening(true);
+      recognition.start();
     }
   };
 
@@ -76,11 +79,9 @@ const TaskInput = () => {
           />
           <button
             type="button"
-            className={`absolute right-2 p-2 rounded-lg transition-colors flex items-center justify-center ${isListening ? 'text-danger bg-danger/20' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
-            onMouseDown={startListening}
-            onMouseUp={stopListening}
-            onMouseLeave={stopListening}
-            title="Hold to speak"
+            className={`absolute right-2 p-2 rounded-lg transition-colors flex items-center justify-center ${isListening ? 'text-danger bg-danger/20 animate-pulse' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
+            onClick={toggleListening}
+            title={isListening ? "Click to stop" : "Click to speak"}
           >
             <Mic size={18} />
           </button>
