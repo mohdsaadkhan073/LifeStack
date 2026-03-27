@@ -6,7 +6,7 @@ import Timeline from '../components/Timeline';
 import FocusTimer from '../components/FocusTimer';
 import { useTasks } from '../context/TaskContext';
 import { useUser } from '../context/UserContext';
-import { Compass, BarChart2, Settings, Plus, Zap, Target, User, Save } from 'lucide-react';
+import { Compass, BarChart2, Plus, Zap, Target, User, Save, RefreshCw, Bell, Shield, TrendingUp, Clock, Activity, Download } from 'lucide-react';
 
 const Dashboard = () => {
   const { tasks, startFocus } = useTasks();
@@ -22,18 +22,68 @@ const Dashboard = () => {
     switch(activeTab) {
       case "Explore":
         return (
-          <div className="flex-1 flex flex-col items-center justify-center bg-surface/20 rounded-3xl border border-white/5">
-            <Compass size={64} className="text-gray-600 mb-6" />
-            <h2 className="text-2xl font-bold text-gray-400">Explore Templates</h2>
-            <p className="text-gray-500 mt-2 text-center max-w-sm">Discover pre-built daily routines and life-hacks submitted by top performers. Coming in Phase 3.</p>
+          <div className="flex-1 glass-panel p-6 md:p-8 rounded-3xl flex flex-col min-h-0 overflow-y-auto custom-scrollbar gap-6 relative">
+            <h3 className="font-semibold text-xl border-b border-white/10 pb-4">Explore Community Templates</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { title: "Deep Work Protocol", author: "@huberman", time: "4.5 hrs", uses: "12K+", color: "from-blue-500/20 to-blue-600/5", tags: ["Focus", "Science"] },
+                { title: "Creator's Morning", author: "@aliabdaal", time: "3 hrs", uses: "8.5K+", color: "from-purple-500/20 to-purple-600/5", tags: ["Creative", "Morning"] },
+                { title: "Student Exam Cram", author: "@studytok", time: "8 hrs", uses: "24K+", color: "from-green-500/20 to-green-600/5", tags: ["Study", "Intense"] },
+                { title: "Weekend Reset", author: "@saad", time: "5 hrs", uses: "3K+", color: "from-orange-500/20 to-orange-600/5", tags: ["Relax", "Chores"] },
+              ].map((template, idx) => (
+                <div key={idx} className={`p-5 rounded-2xl border border-white/5 bg-gradient-to-br ${template.color} hover:scale-[1.02] transition-transform cursor-pointer group flex flex-col justify-between min-h-[160px]`}>
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-bold text-lg text-white group-hover:text-primary transition-colors">{template.title}</h4>
+                      <button className="bg-white/10 hover:bg-white/20 p-1.5 rounded-lg transition-colors"><Download size={16} /></button>
+                    </div>
+                    <span className="text-xs text-gray-400 font-mono">{template.author}</span>
+                  </div>
+                  <div className="flex justify-between items-end mt-4">
+                    <div className="flex gap-1">
+                      {template.tags.map(tag => <span key={tag} className="text-[10px] px-2 py-0.5 rounded bg-black/40 text-gray-300">{tag}</span>)}
+                    </div>
+                    <div className="text-xs text-gray-400"><span className="text-white font-semibold">{template.uses}</span> uses</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         );
       case "Analytics":
         return (
-          <div className="flex-1 flex flex-col items-center justify-center bg-surface/20 rounded-3xl border border-white/5">
-            <BarChart2 size={64} className="text-gray-600 mb-6" />
-            <h2 className="text-2xl font-bold text-gray-400">Your Analytics</h2>
-            <p className="text-gray-500 mt-2 text-center max-w-sm">Deep dive into your productivity metrics and energy patterns throughout the week.</p>
+          <div className="flex-1 glass-panel p-6 md:p-8 rounded-3xl flex flex-col min-h-0 overflow-y-auto custom-scrollbar gap-6 relative">
+            <h3 className="font-semibold text-xl border-b border-white/10 pb-4">Performance Analytics</h3>
+            
+            {/* Top Stat Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="bg-black/30 p-5 rounded-2xl border border-white/5 flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-gray-400 text-sm"><Activity size={16} className="text-primary" /> Focus Score</div>
+                <div className="text-4xl font-black text-white">84<span className="text-lg text-gray-500 font-medium">/100</span></div>
+                <div className="text-xs text-green-400 flex items-center gap-1"><TrendingUp size={12}/> +12% this week</div>
+              </div>
+              <div className="bg-black/30 p-5 rounded-2xl border border-white/5 flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-gray-400 text-sm"><Clock size={16} className="text-accent" /> Deep Work Hours</div>
+                <div className="text-4xl font-black text-white">32<span className="text-lg text-gray-500 font-medium">hrs</span></div>
+                <div className="text-xs text-green-400 flex items-center gap-1"><TrendingUp size={12}/> +4 hrs this week</div>
+              </div>
+              <div className="bg-black/30 p-5 rounded-2xl border border-white/5 flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-gray-400 text-sm"><Target size={16} className="text-danger" /> Task Completion</div>
+                <div className="text-4xl font-black text-white">{lifeScore}<span className="text-lg text-gray-500 font-medium">%</span></div>
+                <div className="text-xs text-gray-500">Based on today's tasks</div>
+              </div>
+            </div>
+
+            {/* Mock Chart Area */}
+            <div className="bg-black/30 w-full h-64 rounded-2xl border border-white/5 flex items-end p-6 gap-2 sm:gap-4 justify-between relative mt-4">
+              <span className="absolute top-4 left-6 text-sm font-semibold text-gray-400">Activity Heatmap</span>
+              {[40, 70, 45, 90, 65, 30, 85].map((height, i) => (
+                <div key={i} className="w-full bg-primary/20 rounded-t-lg relative group transition-all hover:bg-primary/40 cursor-pointer flex flex-col justify-end" style={{ height: `${height}%` }}>
+                  <div className="w-full bg-primary rounded-t-lg" style={{ height: '10%' }}></div>
+                  <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded shadow-lg transition-opacity whitespace-nowrap">Day {i+1}</div>
+                </div>
+              ))}
+            </div>
           </div>
         );
       case "Profile":
@@ -112,15 +162,46 @@ const Dashboard = () => {
                   />
                 </div>
               </div>
+              
+              {/* System Preferences Section (Consolidated from Settings) */}
+              <div className="mt-6 border-t border-white/10 pt-6">
+                <h4 className="font-semibold text-lg text-gray-200 mb-4 flex items-center gap-2">
+                  <Shield size={18} className="text-primary" /> System & Preferences
+                </h4>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between bg-black/20 p-4 rounded-xl border border-white/5">
+                    <div>
+                      <div className="font-medium text-white">Smart AI Overrides</div>
+                      <div className="text-xs text-gray-500">Allow AI to automatically inject longer breaks based on biometric wear loops.</div>
+                    </div>
+                    <div className="w-12 h-6 bg-primary rounded-full relative cursor-pointer shadow-[0_0_10px_rgba(59,130,246,0.5)]">
+                      <div className="w-5 h-5 bg-white rounded-full absolute right-0.5 top-0.5"></div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-black/20 p-4 rounded-xl border border-white/5">
+                    <div>
+                      <div className="font-medium text-white flex items-center gap-2"><Bell size={14} /> Push Notifications</div>
+                      <div className="text-xs text-gray-500">Receive alerts when focused sessions end.</div>
+                    </div>
+                    <div className="w-12 h-6 bg-primary rounded-full relative cursor-pointer shadow-[0_0_10px_rgba(59,130,246,0.5)]">
+                      <div className="w-5 h-5 bg-white rounded-full absolute right-0.5 top-0.5"></div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-black/20 p-4 rounded-xl border border-white/5">
+                    <div>
+                      <div className="font-medium text-white flex items-center gap-2"><RefreshCw size={14} /> Cloud Sync</div>
+                      <div className="text-xs text-gray-500">Continuously backup data to the encrypted cloud.</div>
+                    </div>
+                    <div className="w-12 h-6 bg-white/10 rounded-full relative cursor-pointer">
+                      <div className="w-5 h-5 bg-gray-400 rounded-full absolute left-0.5 top-0.5"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        );
-      case "Settings":
-        return (
-          <div className="flex-1 flex flex-col items-center justify-center bg-surface/20 rounded-3xl border border-white/5">
-            <Settings size={64} className="text-gray-600 mb-6" />
-            <h2 className="text-2xl font-bold text-gray-400">System Preferences</h2>
-            <p className="text-gray-500 mt-2 text-center max-w-sm">Manage cloud sync, AI behaviors, and notification rules.</p>
           </div>
         );
       default: // Dashboard

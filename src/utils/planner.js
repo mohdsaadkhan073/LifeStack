@@ -24,21 +24,46 @@ export const generateDailyPlan = (tasks, startHour = 9) => {
   // Current time pointer (in minutes from start of day, e.g., 9:00 AM = 9 * 60 = 540)
   let currentTimeInMinutes = startHour * 60; 
 
-  pendingTasks.forEach(task => {
+  pendingTasks.forEach((task, index) => {
     const startTime = formatTimeFromMinutes(currentTimeInMinutes);
     const duration = task.duration || 60;
     
-    // Add to timeline
+    // Add task to timeline
     timeline.push({
       ...task,
+      isBreak: false,
       startTime: startTime,
       endTime: formatTimeFromMinutes(currentTimeInMinutes + duration),
       durationMinutes: duration,
-      startMinutes: currentTimeInMinutes // useful for absolute positioning in UI later
+      startMinutes: currentTimeInMinutes
     });
 
-    // Advance time pointer (plus 10 mins break buffer between tasks)
-    currentTimeInMinutes += duration + 10;
+    currentTimeInMinutes += duration;
+
+    // Smart AI Break Calculation Wait Time
+    // Calculate break length: Long duration or High energy needs a longer break
+    let recommendedBreak = 5; // Default short break
+    if (duration >= 90) {
+      recommendedBreak = 20;
+    } else if (duration >= 60 || task.energy === "high") {
+      recommendedBreak = 15;
+    } else if (task.energy === "medium") {
+      recommendedBreak = 10;
+    }
+
+    // Don't add a break after the very last task
+    if (index < pendingTasks.length - 1) {
+      timeline.push({
+        id: `break_${index}`,
+        isBreak: true,
+        title: `${recommendedBreak} Min Recharge`,
+        durationMinutes: recommendedBreak,
+        startTime: formatTimeFromMinutes(currentTimeInMinutes),
+        endTime: formatTimeFromMinutes(currentTimeInMinutes + recommendedBreak),
+        startMinutes: currentTimeInMinutes
+      });
+      currentTimeInMinutes += recommendedBreak;
+    }
   });
 
   return timeline;

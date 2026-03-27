@@ -16,7 +16,6 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
     { id: "Explore", icon: <Compass size={20} />, label: "Explore" },
     { id: "Analytics", icon: <BarChart2 size={20} />, label: "Analytics" },
     { id: "Profile", icon: <User size={20} />, label: "Profile" },
-    { id: "Settings", icon: <Settings size={20} />, label: "Settings" },
   ];
 
   return (
